@@ -1,0 +1,2562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Cartoon Farm Simulator - Scientific Farming Methods (G8 Geography)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=Times+New+Roman&display=swap');
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+  }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background-color: #1e293b;
+    color: #1e293b;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Top Header */
+  header {
+    background: linear-gradient(135deg, #2e7d32 0%, #43a047 100%);
+    color: #fff;
+    padding: 7px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    z-index: 20;
+    border-bottom: 3px solid #1b5e20;
+  }
+
+  header h1 {
+    font-family: 'Fredoka', cursive;
+    font-size: 1.25rem;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-shadow: 1px 2px 0px #1b5e20;
+  }
+
+  .header-badge {
+    background: #ffca28;
+    color: #3e2723;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 2px 10px;
+    border-radius: 20px;
+    box-shadow: 0 2px 0 #f57f17;
+  }
+
+  .reset-btn {
+    background: #ef5350;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 5px 12px;
+    font-family: 'Fredoka', cursive;
+    font-size: 0.85rem;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #b71c1c;
+    transition: transform 0.1s;
+  }
+  .reset-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #b71c1c;
+  }
+
+  /* Main Split Dashboard */
+  .dashboard {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 48px);
+    overflow: hidden;
+  }
+
+  /* LEFT SIDE: 3D Cartoon Model Simulation */
+  .sim-panel {
+    width: 55%;
+    height: 100%;
+    position: relative;
+    background: #87ceeb;
+    display: flex;
+    flex-direction: column;
+    border-right: 4px solid #334155;
+  }
+
+  #canvas-container {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    cursor: grab;
+  }
+  #canvas-container:active {
+    cursor: grabbing;
+  }
+
+  /* Floating Status HUD on 3D Canvas */
+  .sim-hud-top {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    gap: 6px;
+    flex-wrap: nowrap;
+  }
+
+  .hud-card {
+    background: rgba(255, 255, 255, 0.94);
+    border: 2.5px solid #334155;
+    border-radius: 12px;
+    padding: 5px 10px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5px;
+    flex: 1;
+  }
+
+  .hud-title {
+    font-family: 'Fredoka', cursive;
+    font-size: 0.78rem;
+    color: #0f172a;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 2px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .bar-bg {
+    width: 52px;
+    height: 7px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #94a3b8;
+    flex-shrink: 0;
+  }
+
+  .bar-fill {
+    height: 100%;
+    transition: width 0.4s ease, background-color 0.4s ease;
+  }
+
+  .val-text {
+    font-weight: 800;
+    font-size: 0.69rem;
+    color: #0f172a;
+    text-align: right;
+  }
+
+  .camera-hint {
+    position: absolute;
+    bottom: 132px;
+    left: 10px;
+    background: rgba(15, 23, 42, 0.78);
+    color: #f8fafc;
+    padding: 4px 9px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    pointer-events: none;
+  }
+
+  .toast-banner {
+    position: absolute;
+    bottom: 132px;
+    right: 10px;
+    background: rgba(15, 23, 42, 0.92);
+    color: #fff;
+    padding: 7px 11px;
+    border-radius: 10px;
+    font-size: 0.73rem;
+    max-width: 315px;
+    border-left: 4px solid #facc15;
+    pointer-events: none;
+    line-height: 1.35;
+  }
+
+  /* Bottom Cartoon Toolbar (Multi-Select Enabled) */
+  .toolbar-wrapper {
+    background: #fef3c7;
+    border-top: 3px solid #d97706;
+    padding: 6px 8px;
+    z-index: 10;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+  }
+
+  .toolbar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    padding: 0 2px;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .toolbar-header span {
+    font-family: 'Fredoka', cursive;
+    font-size: 0.8rem;
+    color: #92400e;
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 4px;
+  }
+
+  .mode-btn {
+    border: 2px solid #78350f;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-family: 'Fredoka', cursive;
+    font-size: 0.71rem;
+    cursor: pointer;
+    background: #fffbeb;
+    color: #78350f;
+    transition: all 0.15s;
+  }
+
+  .mode-btn.active-without {
+    background: #64748b;
+    color: white;
+    border-color: #1e293b;
+  }
+
+  .mode-btn.active-adv {
+    background: #22c55e;
+    color: white;
+    border-color: #14532d;
+  }
+
+  .mode-btn.active-dis {
+    background: #ef4444;
+    color: white;
+    border-color: #7f1d1d;
+  }
+
+  .toolbar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+  }
+
+  .tool-btn {
+    background: #ffffff;
+    border: 2.5px solid #cbd5e1;
+    border-bottom-width: 4px;
+    border-radius: 10px;
+    padding: 4px 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    text-align: left;
+    transition: all 0.12s;
+    position: relative;
+  }
+
+  .tool-btn:hover {
+    transform: translateY(-1px);
+    border-color: #3b82f6;
+  }
+
+  .tool-btn.selected {
+    background: #dcfce7;
+    border-color: #16a34a;
+    box-shadow: inset 0 0 0 1px #16a34a;
+    transform: translateY(-1px);
+  }
+
+  .tool-btn.selected.overuse-selected {
+    background: #fee2e2;
+    border-color: #dc2626;
+    box-shadow: inset 0 0 0 1px #dc2626;
+  }
+
+  .tool-check {
+    width: 13px;
+    height: 13px;
+    border: 1.5px solid #94a3b8;
+    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 900;
+    color: transparent;
+    background: #f8fafc;
+    flex-shrink: 0;
+  }
+
+  .tool-btn.selected .tool-check {
+    background: #16a34a;
+    border-color: #15803d;
+    color: #fff;
+  }
+
+  .tool-btn.selected.overuse-selected .tool-check {
+    background: #dc2626;
+    border-color: #991b1b;
+    color: #fff;
+  }
+
+  .tool-icon {
+    font-size: 1.05rem;
+    flex-shrink: 0;
+  }
+
+  .tool-name {
+    font-size: 0.63rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1.1;
+  }
+
+  /* RIGHT SIDE: PDF BOOKLET VIEWER */
+  .notes-panel {
+    width: 45%;
+    height: 100%;
+    background: #525659;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .pdf-toolbar {
+    background: #323639;
+    color: #f1f5f9;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px solid #1e293b;
+    flex-wrap: wrap;
+    font-size: 0.76rem;
+  }
+
+  .pdf-controls-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .pdf-btn {
+    background: #475569;
+    color: #fff;
+    border: 1px solid #64748b;
+    border-radius: 5px;
+    padding: 3px 7px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .pdf-btn:hover {
+    background: #64748b;
+  }
+
+  .study-btn {
+    background: #eab308;
+    color: #1e293b;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 0 #a16207;
+  }
+
+  .study-btn.quiz-active {
+    background: #ec4899;
+    color: #fff;
+    box-shadow: 0 2px 0 #9d174d;
+  }
+
+  .rehide-btn {
+    background: #0284c7;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 0 #0369a1;
+  }
+  .rehide-btn:hover {
+    background: #0369a1;
+  }
+
+  .edit-hl-btn {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 2px 0 #047857;
+  }
+  .edit-hl-btn.active {
+    background: #f97316;
+    box-shadow: 0 2px 0 #c2410c;
+  }
+
+  .edit-hl-banner {
+    background: #fffbeb;
+    border-bottom: 2px solid #f59e0b;
+    color: #78350f;
+    padding: 5px 10px;
+    font-size: 0.74rem;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .edit-hl-banner.visible {
+    display: flex;
+  }
+
+  /* Bidirectional Horizontal & Vertical Scrollable Viewport */
+  .pdf-viewport {
+    flex: 1;
+    overflow: auto;
+    padding: 18px;
+    display: block;
+    text-align: center;
+  }
+
+  .pdf-scroll-canvas {
+    display: inline-block;
+    position: relative;
+    vertical-align: top;
+    text-align: left;
+  }
+
+  .pdf-zoom-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: top left;
+    transition: transform 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    align-items: flex-start;
+  }
+
+  .pdf-page {
+    width: 680px;
+    min-height: 940px;
+    background: #ffffff;
+    color: #000000;
+    font-family: "Times New Roman", Times, Georgia, serif;
+    padding: 32px 40px 26px 40px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.45);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    user-select: text;
+    line-height: 1.4;
+    font-size: 14px;
+  }
+
+  .pdf-page * {
+    user-select: text;
+  }
+
+  .pdf-page.active-page-highlight {
+    outline: 4px solid #facc15;
+  }
+
+  .pdf-header-running {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: #333;
+    border-bottom: 1px solid #999;
+    padding-bottom: 4px;
+    margin-bottom: 12px;
+  }
+
+  .pdf-footer-running {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #333;
+    border-top: 1px solid #ccc;
+    padding-top: 6px;
+    margin-top: 14px;
+  }
+
+  .pdf-page-num {
+    font-weight: bold;
+    font-size: 13px;
+  }
+
+  .pdf-h1 {
+    font-size: 17.5px;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-bottom: 10px;
+  }
+
+  .pdf-h2 {
+    font-size: 15.5px;
+    font-weight: bold;
+    text-decoration: underline;
+    margin-top: 10px;
+    margin-bottom: 7px;
+  }
+
+  .pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0 10px 0;
+    font-size: 13.5px;
+  }
+
+  .pdf-table th, .pdf-table td {
+    border: 1px solid #000000;
+    padding: 5px 8px;
+    vertical-align: top;
+    text-align: left;
+  }
+
+  .pdf-table th {
+    background-color: #f3f4f6;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .pdf-pic-frame {
+    border: 1px solid #333;
+    background: #fafafa;
+    padding: 6px;
+    text-align: center;
+    margin: 6px 0;
+  }
+
+  .pdf-pic-caption {
+    font-size: 12px;
+    font-weight: bold;
+    margin-top: 4px;
+    color: #111;
+  }
+
+  /* Highlighted Memorization Words */
+  .hl {
+    background-color: #fef08a;
+    color: #000;
+    font-weight: bold;
+    padding: 0 3px;
+    border-bottom: 1.5px solid #ca8a04;
+    border-radius: 2px;
+    transition: background-color 0.15s, color 0.15s;
+  }
+
+  /* Edit Highlight Mode visual cue */
+  body.edit-hl-mode .hl {
+    outline: 1.5px dashed #dc2626;
+    cursor: pointer;
+  }
+  body.edit-hl-mode .hl:hover::after {
+    content: " ✕";
+    font-size: 10px;
+    color: #dc2626;
+  }
+
+  /* Hide Highlighted Words for Memorization */
+  body.quiz-mode .hl {
+    background-color: #1e293b;
+    color: transparent;
+    border-bottom: 1.5px dashed #64748b;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  body.quiz-mode .hl:hover,
+  body.quiz-mode .hl.revealed {
+    background-color: #fef08a !important;
+    color: #000 !important;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+
+<header>
+  <h1>
+    <span>🚜</span>
+    <span>Scientific Farming Methods: 3D Cartoon Simulator</span>
+    <span class="header-badge">G8 Geography • Food Problems</span>
+  </h1>
+  <div style="display:flex; gap:8px; align-items:center;">
+    <button class="reset-btn" onclick="resetSimulation()">🔄 Reset Original Condition</button>
+  </div>
+</header>
+
+<div class="dashboard">
+  <!-- LEFT SIDE: 3D CARTOON MODEL SIMULATION -->
+  <div class="sim-panel">
+    <div id="canvas-container"></div>
+
+    <!-- Top Status HUD -->
+    <div class="sim-hud-top">
+      <div class="hud-card" style="flex: 1.25;">
+        <div class="hud-title">🌾 Farmland and Food</div>
+        <div class="stat-row">
+          <span>Crop Yield:</span>
+          <div class="bar-bg"><div id="bar-yield" class="bar-fill" style="width:28%; background:#ef4444;"></div></div>
+        </div>
+        <div class="stat-row">
+          <span>Soil Moisture:</span>
+          <div class="bar-bg"><div id="bar-moisture" class="bar-fill" style="width:25%; background:#f59e0b;"></div></div>
+        </div>
+        <div class="stat-row">
+          <span>Air Temp:</span>
+          <span class="val-text" id="val-temp">22°C (Dry)</span>
+        </div>
+        <div class="stat-row">
+          <span>Pest:</span>
+          <span class="val-text" id="val-pest" style="color:#dc2626;">Active</span>
+        </div>
+        <div class="stat-row">
+          <span>Weed:</span>
+          <span class="val-text" id="val-weed" style="color:#dc2626;">Growing</span>
+        </div>
+        <div class="stat-row">
+          <span>Bees/Butterfly:</span>
+          <span class="val-text" id="val-bees" style="color:#16a34a;">Active 🐝🦋</span>
+        </div>
+      </div>
+
+      <div class="hud-card">
+        <div class="hud-title">💧 River &amp; Groundwater</div>
+        <div class="stat-row">
+          <span>River Water:</span>
+          <div class="bar-bg"><div id="bar-river" class="bar-fill" style="width:85%; background:#0284c7;"></div></div>
+        </div>
+        <div class="stat-row">
+          <span>Water Table:</span>
+          <div class="bar-bg"><div id="bar-gw" class="bar-fill" style="width:85%; background:#38bdf8;"></div></div>
+        </div>
+        <div class="stat-row">
+          <span>Nearby Farm:</span>
+          <span class="val-text" id="val-nearby" style="color:#16a34a;">Healthy</span>
+        </div>
+      </div>
+
+      <div class="hud-card">
+        <div class="hud-title">🏙️ Distant City &amp; Lake</div>
+        <div class="stat-row">
+          <span>City Lake:</span>
+          <div class="bar-bg"><div id="bar-lake" class="bar-fill" style="width:85%; background:#0ea5e9;"></div></div>
+        </div>
+        <div class="stat-row">
+          <span>City Hospital:</span>
+          <span class="val-text" id="val-hospital" style="color:#16a34a;">Normal</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="camera-hint">🖱️ Left Drag: Rotate • Scroll: Zoom • Right Drag: Pan</div>
+
+    <div id="sim-toast" class="toast-banner">
+      <strong>Original Condition (0 tools selected):</strong> Dry area, poor soil, 1 farmer working slowly, pests &amp; weeds present, bees/butterflies active, low crop yield.
+    </div>
+
+    <!-- Bottom Cartoon Toolbar (Multi-Select Tools + Combined Effects) -->
+    <div class="toolbar-wrapper">
+      <div class="toolbar-header">
+        <span>🛠️ Multi-Select Tools (<strong id="selected-count">0</strong> active):</span>
+        <div class="mode-toggle">
+          <button id="btn-mode-without" class="mode-btn active-without" onclick="setSimState('without')">🚫 Without Tools</button>
+          <button id="btn-mode-with" class="mode-btn" onclick="setSimState('with')">✅ With Tools (Normal)</button>
+          <button id="btn-mode-overuse" class="mode-btn" onclick="setSimState('overuse')">⚠️ Overuse / Over Time</button>
+        </div>
+      </div>
+
+      <div class="toolbar-grid">
+        <button class="tool-btn" id="tool-irrigation" onclick="toggleTool('irrigation')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">💦</span>
+          <span class="tool-name">Irrigation System</span>
+        </button>
+
+        <button class="tool-btn" id="tool-fertilizer" onclick="toggleTool('fertilizer')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🧪</span>
+          <span class="tool-name">Chemical Fertilizer</span>
+        </button>
+
+        <button class="tool-btn" id="tool-pesticide" onclick="toggleTool('pesticide')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🐛</span>
+          <span class="tool-name">Pesticide</span>
+        </button>
+
+        <button class="tool-btn" id="tool-weedicide" onclick="toggleTool('weedicide')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🌿</span>
+          <span class="tool-name">Weedicide</span>
+        </button>
+
+        <button class="tool-btn" id="tool-machines" onclick="toggleTool('machines')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🚜</span>
+          <span class="tool-name">Machines</span>
+        </button>
+
+        <button class="tool-btn" id="tool-greenhouse" onclick="toggleTool('greenhouse')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🏡</span>
+          <span class="tool-name">Greenhouse</span>
+        </button>
+
+        <button class="tool-btn" id="tool-gm-drought" onclick="toggleTool('gm-drought')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🌵</span>
+          <span class="tool-name">Drought-resistant GM Crops</span>
+        </button>
+
+        <button class="tool-btn" id="tool-gm-temp" onclick="toggleTool('gm-temp')">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🌡️</span>
+          <span class="tool-name">Temperature-resistant GM Crops</span>
+        </button>
+
+        <button class="tool-btn" id="tool-gm-pest" onclick="toggleTool('gm-pest')" style="grid-column: span 2;">
+          <span class="tool-check">✓</span>
+          <span class="tool-icon">🛡️</span>
+          <span class="tool-name">Pest-resistant GM Crops</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT SIDE: ORIGINAL PDF BOOKLET FORMAT (PAGES 42 - 46) -->
+  <div class="notes-panel">
+    <div class="pdf-toolbar">
+      <div class="pdf-controls-group">
+        <span>📄 Page: <strong id="page-indicator">42</strong> / 46</span>
+        <button class="pdf-btn" onclick="prevPage()">◀</button>
+        <button class="pdf-btn" onclick="nextPage()">▶</button>
+      </div>
+
+      <div class="pdf-controls-group">
+        <button class="pdf-btn" onclick="changeZoom(-0.1)">➖</button>
+        <span id="zoom-label" style="min-width:34px; text-align:center;">90%</span>
+        <button class="pdf-btn" onclick="changeZoom(0.1)">➕</button>
+      </div>
+
+      <div class="pdf-controls-group">
+        <button class="study-btn" id="btn-quiz" onclick="toggleQuizMode()">🧠 Hide Highlight</button>
+        <button class="rehide-btn" id="btn-rehide" onclick="backToAllHide()" style="display:none;">🙈 Back to All Hide</button>
+        <button class="edit-hl-btn" id="btn-edit-hl" onclick="toggleEditHighlightMode()">✏️ Customize Words</button>
+      </div>
+    </div>
+
+    <!-- Custom Highlight Editor Banner -->
+    <div class="edit-hl-banner" id="edit-hl-banner">
+      <span>✍️ <strong>Customize Mode:</strong> Select any text to highlight it, or click an existing yellow highlight to remove it.</span>
+      <div style="display:flex; gap:4px;">
+        <button class="pdf-btn" style="background:#16a34a; border-color:#15803d;" onclick="highlightCurrentSelection()">🖍️ Highlight Selected</button>
+        <button class="pdf-btn" style="background:#dc2626; border-color:#b91c1c;" onclick="resetDefaultHighlights()">↺ Reset Default</button>
+      </div>
+    </div>
+
+    <div class="pdf-viewport" id="pdf-viewport" onscroll="updateCurrentPageOnScroll()">
+      <div class="pdf-scroll-canvas" id="pdf-scroll-canvas">
+        <div class="pdf-zoom-wrapper" id="pdf-zoom-wrapper" style="transform: scale(0.9);">
+
+          <!-- PAGE 42: 5.1 & 5.2 Irrigation Systems -->
+          <div class="pdf-page" id="pdf-page-42" data-page="42">
+            <div>
+              <div class="pdf-header-running">
+                <span>Pui Kiu College • G8 Geography (2025-26 Term 1)</span>
+                <span>Food Problems – Can We Feed Ourselves?</span>
+              </div>
+
+              <div class="pdf-h1">5. Are Scientific Farming Methods Effective to Solve Farming Problems in China?</div>
+              <div class="pdf-h2">5.1. What are Scientific Farming Methods?</div>
+              <p style="margin-bottom:6px;">
+                Scientific farming methods refer to the use of <span class="hl">technology</span> in farming.
+              </p>
+              <p style="margin-bottom:8px;">
+                <strong>2 Major goals:</strong> Solve <span class="hl">farming problems</span> and increase <span class="hl">farming output/ farming productivity</span>.
+              </p>
+              <p style="font-weight:bold; margin-bottom:4px;">5 common scientific farming methods</p>
+              <ol style="padding-left:24px; margin-bottom:16px;">
+                <li><span class="hl">Irrigation systems</span></li>
+                <li><span class="hl">Using chemicals</span></li>
+                <li><span class="hl">Machines</span></li>
+                <li><span class="hl">Greenhouses</span></li>
+                <li><span class="hl">Genetically modified crops (GM Crops)</span></li>
+              </ol>
+
+              <div class="pdf-h2">5.2. Using Irrigation Systems</div>
+              <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:12px;">
+                <div style="flex:1;">
+                  <p style="margin-bottom:4px;"><strong>Sprinklers</strong></p>
+                  <ul style="padding-left:20px; margin-bottom:12px;">
+                    <li>Irrigation water from <span class="hl">surface water (e.g. reservoirs and rivers)</span> and <span class="hl">groundwater</span>.</li>
+                  </ul>
+
+                  <p style="font-weight:bold; margin-bottom:4px;">Advantages:</p>
+                  <ul style="padding-left:20px;">
+                    <li><span class="hl">Increase water supply</span> in dry areas.</li>
+                    <li><span class="hl">Increase farming area</span>.</li>
+                    <li><span class="hl">Lengthen growing season</span>.</li>
+                    <li><span class="hl">Higher crop yields/crop production</span></li>
+                  </ul>
+                </div>
+
+                <div class="pdf-pic-frame" style="width:245px; flex-shrink:0;">
+                  <svg viewBox="0 0 240 160" width="100%" height="150" style="display:block; background:#e0f2fe;">
+                    <rect x="0" y="0" width="240" height="65" fill="#bae6fd"/>
+                    <circle cx="205" cy="25" r="14" fill="#fde047"/>
+                    <polygon points="0,65 240,65 240,160 0,160" fill="#65a30d"/>
+                    <line x1="0" y1="90" x2="240" y2="90" stroke="#4d7c0f" stroke-width="1.5"/>
+                    <line x1="0" y1="120" x2="240" y2="120" stroke="#4d7c0f" stroke-width="1.5"/>
+                    <line x1="0" y1="145" x2="240" y2="145" stroke="#4d7c0f" stroke-width="1.5"/>
+                    <line x1="15" y1="78" x2="225" y2="68" stroke="#475569" stroke-width="3"/>
+                    <line x1="55" y1="76" x2="55" y2="105" stroke="#334155" stroke-width="2.5"/>
+                    <circle cx="55" cy="107" r="6" fill="#1e293b"/>
+                    <line x1="145" y1="72" x2="145" y2="98" stroke="#334155" stroke-width="2.5"/>
+                    <circle cx="145" cy="100" r="5" fill="#1e293b"/>
+                    <path d="M35,78 Q25,95 45,98 Z" fill="#ffffff" opacity="0.75"/>
+                    <path d="M85,75 Q75,93 95,96 Z" fill="#ffffff" opacity="0.75"/>
+                    <path d="M125,73 Q115,90 135,93 Z" fill="#ffffff" opacity="0.75"/>
+                    <path d="M175,70 Q165,86 185,89 Z" fill="#ffffff" opacity="0.75"/>
+                    <path d="M210,69 Q200,84 220,86 Z" fill="#ffffff" opacity="0.75"/>
+                  </svg>
+                  <div class="pdf-pic-caption">Sprinkler Irrigation System</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="pdf-footer-running">
+              <span>Notes Booklet • Food Problems</span>
+              <span class="pdf-page-num">Page 42</span>
+            </div>
+          </div>
+
+          <!-- PAGE 43: 5.2 Irrigation Systems Disadvantages -->
+          <div class="pdf-page" id="pdf-page-43" data-page="43">
+            <div>
+              <div class="pdf-header-running">
+                <span>Pui Kiu College • G8 Geography (2025-26 Term 1)</span>
+                <span>Food Problems – Can We Feed Ourselves?</span>
+              </div>
+
+              <p style="font-weight:bold; margin-bottom:6px;">• Disadvantages:</p>
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%;">(1) Amount of water in rivers &amp; lakes decreases</th>
+                    <th style="width:50%;">(2) Amount of freshwater to people living downstream decreases</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td rowspan="3">
+                      Taking out <span class="hl">too much water from rivers and lakes</span> to farmland.<br>
+                      +<br>
+                      Tapping <span class="hl">too much groundwater</span> for irrigation.<br>
+                      <span class="hl">Water table drops.</span><br>
+                      Amount of groundwater decreases.<br>
+                      &rArr; <span class="hl">Amount of water in rivers &amp; lakes decreases.</span>
+                    </td>
+                    <td>
+                      <span class="hl">Storing water in dams and reservoirs</span> in upstream areas for irrigation.<br>
+                      &rArr; <span class="hl">Amount of freshwater to people living downstream decreases.</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <th style="background:#f3f4f6;">(3) Land subsides and collapses</th>
+                  </tr>
+                  <tr>
+                    <td>
+                      Without the <span class="hl">support of groundwater</span>, <span class="hl">land may subside and collapse</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="pdf-pic-frame" style="margin-top:10px; text-align:left; padding:10px;">
+                <div style="font-weight:bold; font-size:13px; margin-bottom:6px;">
+                  Figure 5 How tapping too much groundwater leads to land subsidence and dries up a river
+                </div>
+
+                <div style="margin-bottom:8px; border:1px solid #94a3b8; background:#fff; padding:6px;">
+                  <div style="font-weight:bold; font-size:12.5px; margin-bottom:4px;">
+                    a &nbsp;When groundwater is tapped slower than it can be replenished:
+                  </div>
+                  <svg viewBox="0 0 560 135" width="100%" height="130">
+                    <rect x="0" y="0" width="560" height="45" fill="#f0f9ff"/>
+                    <path d="M295,12 Q305,2 320,8 Q335,2 345,12 Q352,20 340,24 L298,24 Q288,20 295,12 Z" fill="#94a3b8"/>
+                    <line x1="305" y1="27" x2="300" y2="42" stroke="#0284c7" stroke-width="1.5"/>
+                    <line x1="320" y1="27" x2="315" y2="42" stroke="#0284c7" stroke-width="1.5"/>
+                    <line x1="335" y1="27" x2="330" y2="42" stroke="#0284c7" stroke-width="1.5"/>
+                    <rect x="0" y="45" width="560" height="35" fill="#d97706" opacity="0.45"/>
+                    <rect x="0" y="80" width="560" height="55" fill="#38bdf8" opacity="0.55"/>
+                    <line x1="0" y1="80" x2="560" y2="80" stroke="#0369a1" stroke-width="2" stroke-dasharray="5,3"/>
+                    <rect x="20" y="37" width="80" height="8" fill="#16a34a"/>
+                    <rect x="135" y="34" width="12" height="72" fill="#64748b"/>
+                    <rect x="130" y="30" width="22" height="8" fill="#334155"/>
+                    <path d="M430,45 Q465,78 500,45 Z" fill="#0ea5e9"/>
+                    <text x="15" y="24" font-size="11" font-family="Times New Roman" font-weight="bold">Pumping groundwater for irrigation</text>
+                    <text x="152" y="42" font-size="11" font-family="Times New Roman">Well</text>
+                    <text x="230" y="58" font-size="11" font-family="Times New Roman" font-weight="bold">Groundwater can be replenished when there is rain</text>
+                    <text x="415" y="24" font-size="11" font-family="Times New Roman">Diverting river water to irrigate crops</text>
+                    <text x="453" y="62" font-size="11" font-family="Times New Roman" fill="#fff" font-weight="bold">River</text>
+                    <text x="15" y="96" font-size="11" font-family="Times New Roman" font-weight="bold" fill="#0c4a6e">Water table (High)</text>
+                  </svg>
+                </div>
+
+                <div style="border:1px solid #94a3b8; background:#fff; padding:6px;">
+                  <div style="font-weight:bold; font-size:12.5px; margin-bottom:4px;">
+                    b &nbsp;When groundwater is tapped faster than it can be replenished:
+                  </div>
+                  <svg viewBox="0 0 560 140" width="100%" height="135">
+                    <rect x="0" y="0" width="560" height="45" fill="#fef2f2"/>
+                    <line x1="0" y1="45" x2="560" y2="45" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="4,3"/>
+                    <path d="M0,45 L90,45 Q165,74 240,45 L430,45 Q465,75 500,45 L560,45 L560,140 L0,140 Z" fill="#d97706" opacity="0.45"/>
+                    <rect x="0" y="112" width="560" height="28" fill="#38bdf8" opacity="0.55"/>
+                    <line x1="0" y1="112" x2="560" y2="112" stroke="#0369a1" stroke-width="2" stroke-dasharray="5,3"/>
+                    <rect x="158" y="45" width="12" height="58" fill="#64748b"/>
+                    <path d="M430,45 Q465,75 500,45" fill="none" stroke="#78350f" stroke-width="2.5"/>
+                    <text x="12" y="22" font-size="11" font-family="Times New Roman" font-weight="bold" fill="#991b1b">Without the support of groundwater, land subsides and collapses</text>
+                    <text x="12" y="36" font-size="10.5" font-family="Times New Roman">Previous land surface &darr; (Well dries up)</text>
+                    <text x="15" y="106" font-size="11" font-family="Times New Roman" font-weight="bold" fill="#0369a1">Water table drops &darr;</text>
+                    <text x="275" y="25" font-size="11" font-family="Times New Roman" font-weight="bold" fill="#991b1b">River dries up as water table drops &amp; water diverted</text>
+                    <text x="442" y="65" font-size="10.5" font-family="Times New Roman" fill="#78350f">Dry river bed</text>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div class="pdf-footer-running">
+              <span>Notes Booklet • Food Problems</span>
+              <span class="pdf-page-num">Page 43</span>
+            </div>
+          </div>
+
+          <!-- PAGE 44: 5.3 Using Chemicals -->
+          <div class="pdf-page" id="pdf-page-44" data-page="44">
+            <div>
+              <div class="pdf-header-running">
+                <span>Pui Kiu College • G8 Geography (2025-26 Term 1)</span>
+                <span>Food Problems – Can We Feed Ourselves?</span>
+              </div>
+
+              <div class="pdf-h2">5.3) Using chemicals</div>
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th style="width:18%;"></th>
+                    <th>Pesticide</th>
+                    <th>Herbicide/Weedicide</th>
+                    <th>Chemical Fertilizers</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>Advantages</th>
+                    <td>
+                      • <span class="hl">Controls pests.</span><br>
+                      • <span class="hl">Reduces the risk of crop failure.</span><br>
+                      • <span class="hl">Increases crop yields.</span>
+                    </td>
+                    <td>
+                      • <span class="hl">Controls weeds.</span><br>
+                      • <span class="hl">Reduces the risk of crop failure.</span><br>
+                      • <span class="hl">Increases crop yields.</span>
+                    </td>
+                    <td>
+                      • <span class="hl">Makes the soil fertile.</span><br>
+                      • <span class="hl">Increases crop yields.</span><br>
+                      • <span class="hl">Improves crop quality.</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <p style="font-weight:bold; margin:6px 0 4px 0;">• Disadvantages of overusing pesticide/herbicide:</p>
+              <table class="pdf-table">
+                <tbody>
+                  <tr>
+                    <td style="width:38%;">1. Amount of pests may <span class="hl">increase in the long run</span>.</td>
+                    <td>
+                      Pesticides will <span class="hl">kill all insects/kill good insects</span>.<br>
+                      Pests may <span class="hl">develop resistance</span> to pesticides.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>2. <span class="hl">Death of living things in the water</span>.</td>
+                    <td>
+                      Pesticides/Herbicides washed into the rivers will cause <span class="hl">water pollution</span>.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>3. <span class="hl">Harmful to people's health</span>.</td>
+                    <td>
+                      When people eat the <span class="hl">contaminated farm produce</span>, it would be <span class="hl">harmful to people's health</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <p style="font-weight:bold; margin:8px 0 4px 0;">Disadvantages of overusing chemical fertilizers:</p>
+              <table class="pdf-table">
+                <tbody>
+                  <tr>
+                    <td colspan="2">When the chemical fertilizers are washed into rivers, or down into groundwater</td>
+                  </tr>
+                  <tr>
+                    <td style="width:38%;">1. <span class="hl">Pollution (Soil &amp; Water)</span></td>
+                    <td>
+                      Causing <span class="hl">water pollution</span>.<br>
+                      Chemical fertilizers may <span class="hl">change the acidity of the soil</span> &rArr; <span class="hl">Soil pollution</span>.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>2. <span class="hl">Death of living things in water</span></td>
+                    <td>
+                      Fertilizers are <span class="hl">nutrients for algae</span>. When fertilizers are washed into rivers, <span class="hl">algae grow rapidly</span>. Causing <span class="hl">eutrophication</span>. And <span class="hl">algae use up oxygen</span> in the river. <span class="hl">Death of living things in the water</span>.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>3. <span class="hl">Harmful to people's health</span>.</td>
+                    <td>
+                      When people consume <span class="hl">farm produce with high levels of chemicals</span>, It would be <span class="hl">harmful to their health</span>.
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>4. Cause <span class="hl">global warming</span></td>
+                    <td>
+                      Overusing chemical fertilizers may release large amount of <span class="hl">greenhouse gases (nitrous oxide)</span>. <span class="hl">Intensify greenhouse effect</span>. Causes <span class="hl">global warming</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pdf-footer-running">
+              <span>Notes Booklet • Food Problems</span>
+              <span class="pdf-page-num">Page 44</span>
+            </div>
+          </div>
+
+          <!-- PAGE 45: 5.4 Using Machines & 5.5 Using Greenhouses -->
+          <div class="pdf-page" id="pdf-page-45" data-page="45">
+            <div>
+              <div class="pdf-header-running">
+                <span>Pui Kiu College • G8 Geography (2025-26 Term 1)</span>
+                <span>Food Problems – Can We Feed Ourselves?</span>
+              </div>
+
+              <div class="pdf-h2">5.4) Using Machines</div>
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:6px;">
+                <div>
+                  <p style="font-size:14.5px;"><strong>Combine Harvester</strong></p>
+                  <p style="font-size:12.5px; color:#333;">Used for harvesting crops quickly across large farmlands.</p>
+                </div>
+                <div class="pdf-pic-frame" style="width:205px; flex-shrink:0; margin:0;">
+                  <svg viewBox="0 0 200 105" width="100%" height="95" style="display:block; background:#e0f2fe;">
+                    <rect x="0" y="65" width="200" height="40" fill="#eab308"/>
+                    <rect x="65" y="32" width="85" height="36" rx="4" fill="#16a34a"/>
+                    <rect x="45" y="36" width="26" height="24" fill="#bae6fd" stroke="#15803d" stroke-width="2"/>
+                    <rect x="18" y="54" width="32" height="16" fill="#dc2626"/>
+                    <circle cx="24" cy="62" r="9" fill="#facc15" stroke="#b45309" stroke-width="1.5"/>
+                    <circle cx="75" cy="70" r="14" fill="#1e293b"/>
+                    <circle cx="75" cy="70" r="6" fill="#facc15"/>
+                    <circle cx="132" cy="73" r="10" fill="#1e293b"/>
+                    <circle cx="132" cy="73" r="4" fill="#facc15"/>
+                  </svg>
+                  <div class="pdf-pic-caption">Combine Harvester</div>
+                </div>
+              </div>
+
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%;">Advantages</th>
+                    <th style="width:50%;">Disadvantages</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      • Solve the problem of <span class="hl">labour shortage</span>.<br>
+                      • Improve <span class="hl">farming efficiency</span>.
+                    </td>
+                    <td>
+                      • <span class="hl">Combustion (Burning) of fossil fuels</span>.<br>
+                      • Releases <span class="hl">greenhouse gases</span>.<br>
+                      • <span class="hl">Intensifies the greenhouse effect</span>.<br>
+                      • Causes <span class="hl">global warming</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="pdf-h2" style="margin-top:14px;">5.5) Using Greenhouses</div>
+              <div class="pdf-pic-frame" style="padding:8px;">
+                <svg viewBox="0 0 560 155" width="100%" height="150" style="display:block; background:#f1f5f9;">
+                  <rect x="0" y="0" width="560" height="125" fill="#cbd5e1"/>
+                  <rect x="0" y="125" width="560" height="30" fill="#e2e8f0"/>
+                  <path d="M15,35 Q45,28 75,35" fill="none" stroke="#475569" stroke-width="2"/>
+                  <path d="M20,52 Q55,45 85,52" fill="none" stroke="#475569" stroke-width="2"/>
+                  <text x="15" y="18" font-size="11.5" font-family="Times New Roman" font-weight="bold">Outside the greenhouse:</text>
+                  <text x="15" y="72" font-size="11" font-family="Times New Roman">Air temperature: 3°C</text>
+                  <text x="15" y="87" font-size="11" font-family="Times New Roman">Relative humidity: 30%</text>
+                  <text x="15" y="102" font-size="11" font-family="Times New Roman">Wind: Strong / Windy</text>
+                  <text x="15" y="117" font-size="10.5" font-family="Times New Roman" fill="#1e3a8a">(Snowstorm may occur in winter)</text>
+
+                  <path d="M185,125 L185,55 Q315,5 445,55 L445,125 Z" fill="#fef9c3" stroke="#0284c7" stroke-width="2.5"/>
+                  <circle cx="505" cy="28" r="16" fill="#facc15"/>
+                  <line x1="485" y1="36" x2="430" y2="55" stroke="#eab308" stroke-width="2"/>
+                  <rect x="205" y="115" width="220" height="10" fill="#78350f"/>
+                  <circle cx="230" cy="105" r="9" fill="#16a34a"/>
+                  <circle cx="275" cy="105" r="9" fill="#16a34a"/>
+                  <circle cx="320" cy="105" r="9" fill="#16a34a"/>
+                  <circle cx="365" cy="105" r="9" fill="#16a34a"/>
+                  <circle cx="405" cy="105" r="9" fill="#16a34a"/>
+
+                  <text x="245" y="45" font-size="11.5" font-family="Times New Roman" font-weight="bold" fill="#15803d">Inside the greenhouse:</text>
+                  <text x="245" y="60" font-size="11" font-family="Times New Roman">Air temperature: 15°C</text>
+                  <text x="245" y="74" font-size="11" font-family="Times New Roman">Relative humidity: 70%</text>
+                  <text x="245" y="88" font-size="11" font-family="Times New Roman">Wind: Calm</text>
+
+                  <circle cx="478" cy="105" r="8" fill="#dc2626"/>
+                  <text x="455" y="88" font-size="10.5" font-family="Times New Roman" font-weight="bold" fill="#991b1b">Pest: We cannot go in!</text>
+                </svg>
+              </div>
+
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th style="width:50%;">Advantages</th>
+                    <th style="width:50%;">Disadvantages</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      • <span class="hl">Environmental conditions</span> (e.g., air temperature, sunlight, humidity etc.) are <span class="hl">controlled in the greenhouse</span>.<br>
+                      • It <span class="hl">increases farming areas</span>.<br>
+                      • Farmers can have <span class="hl">more choices to make on what to grow</span>.<br>
+                      • <span class="hl">Reduce crop failure</span> caused by extreme weather conditions and pests.<br>
+                      • <span class="hl">Higher crop yield</span>.
+                    </td>
+                    <td>
+                      • <span class="hl">Combustion (Burning) of fossil fuels</span>.<br>
+                      • Releases <span class="hl">greenhouse gases</span>.<br>
+                      • <span class="hl">Intensifies the greenhouse effect</span>.<br>
+                      • Causes <span class="hl">global warming</span>.<br>
+                      • <span class="hl">High construction and operating costs</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pdf-footer-running">
+              <span>Notes Booklet • Food Problems</span>
+              <span class="pdf-page-num">Page 45</span>
+            </div>
+          </div>
+
+          <!-- PAGE 46: 5.6 GM Crops & 5.7 Limitations -->
+          <div class="pdf-page" id="pdf-page-46" data-page="46">
+            <div>
+              <div class="pdf-header-running">
+                <span>Pui Kiu College • G8 Geography (2025-26 Term 1)</span>
+                <span>Food Problems – Can We Feed Ourselves?</span>
+              </div>
+
+              <div class="pdf-h2">5.6 Using Genetically Modified Crops (GM Crops)</div>
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th style="width:33.3%;">Drought-resistant GM crops</th>
+                    <th style="width:33.3%;">Temperature-tolerant GM crops</th>
+                    <th style="width:33.3%;">Pest-resistant GM crops</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style="text-align:center; background:#fafafa;">
+                      <svg viewBox="0 0 160 85" width="100%" height="80">
+                        <rect x="0" y="55" width="160" height="30" fill="#d97706" opacity="0.5"/>
+                        <path d="M15,65 L35,75 L25,83 M110,62 L130,74 L145,68" stroke="#78350f" stroke-width="1.5" fill="none"/>
+                        <rect x="76" y="22" width="8" height="36" fill="#16a34a"/>
+                        <ellipse cx="66" cy="36" rx="12" ry="5" fill="#22c55e"/>
+                        <ellipse cx="94" cy="32" rx="12" ry="5" fill="#22c55e"/>
+                        <circle cx="135" cy="18" r="11" fill="#facc15"/>
+                      </svg>
+                    </td>
+                    <td style="text-align:center; background:#fafafa;">
+                      <svg viewBox="0 0 160 85" width="100%" height="80">
+                        <rect x="0" y="0" width="80" height="85" fill="#e0f2fe"/>
+                        <rect x="80" y="0" width="80" height="85" fill="#ffedd5"/>
+                        <rect x="24" y="14" width="8" height="48" rx="4" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+                        <circle cx="28" cy="64" r="7" fill="#ef4444"/>
+                        <rect x="26" y="26" width="4" height="36" fill="#ef4444"/>
+                        <rect x="92" y="28" width="6" height="38" fill="#15803d"/>
+                        <circle cx="84" cy="42" r="8" fill="#ef4444"/>
+                        <circle cx="106" cy="38" r="8" fill="#ef4444"/>
+                      </svg>
+                    </td>
+                    <td style="text-align:center; background:#fafafa;">
+                      <svg viewBox="0 0 160 85" width="100%" height="80">
+                        <ellipse cx="62" cy="44" rx="13" ry="24" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/>
+                        <path d="M46,45 Q50,68 62,70 Q74,68 78,45" fill="#16a34a"/>
+                        <path d="M92,26 L112,26 L112,44 Q102,56 92,44 Z" fill="#38bdf8" stroke="#0369a1" stroke-width="1.5"/>
+                        <circle cx="132" cy="40" r="7" fill="#dc2626"/>
+                        <line x1="122" y1="30" x2="142" y2="50" stroke="#991b1b" stroke-width="2"/>
+                      </svg>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>Advantages</strong><br>
+                      • They <span class="hl">need less water to grow</span>.<br>
+                      • Solve the <span class="hl">water shortage problem</span>.
+                    </td>
+                    <td>
+                      <strong>Advantages</strong><br>
+                      • They can <span class="hl">grow at higher or lower temperature</span>.<br>
+                      • <span class="hl">Lengthen the growing season</span>.
+                    </td>
+                    <td>
+                      <strong>Advantages</strong><br>
+                      • They can <span class="hl">resist attack from pests</span>.<br>
+                      • <span class="hl">Lower risks of crop failure</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <p style="font-weight:bold; margin-top:12px; margin-bottom:6px;">Disadvantages of all types of GM Crops</p>
+              <table class="pdf-table">
+                <tbody>
+                  <tr>
+                    <td>
+                      • They may <span class="hl">harm and kill other insects</span>.<br>
+                      • It <span class="hl">reduces biodiversity</span>.<br>
+                      • They may <span class="hl">pollute/ contaminate other non-GM crops</span>.<br>
+                      • They may <span class="hl">cause allergies to people/ harmful to people's health</span>.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div class="pdf-h2" style="margin-top:18px;">5.7 Limitations of using scientific farming methods</div>
+              <p style="margin-bottom:6px;">If scientific farming methods are so useful in solving farming problems in China, why does not every farmer use them?</p>
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th style="width:38%;">Requirement of the methods</th>
+                    <th>Farmers in China</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="hl">High capital (High cost)</span></td>
+                    <td>Some farmers are <span class="hl">too poor to afford the high costs</span> of installing such farming technologies.</td>
+                  </tr>
+                  <tr>
+                    <td><span class="hl">High technological know-how</span></td>
+                    <td>Some farmers have <span class="hl">low education level</span> so they <span class="hl">do not know how to use</span> such methods to farm.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="pdf-footer-running">
+              <span>Notes Booklet • Food Problems</span>
+              <span class="pdf-page-num">Page 46</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================================
+// 1. PDF VIEWER CONTROLS + MEMORIZATION & CUSTOM HIGHLIGHT EDITOR
+// ============================================================================
+let currentZoom = 0.9;
+let currentPage = 42;
+const pageOrder = [42, 43, 44, 45, 46];
+const zoomWrapper = document.getElementById('pdf-zoom-wrapper');
+const defaultBookletHTML = zoomWrapper.innerHTML;
+let editHighlightMode = false;
+
+function syncPdfScrollDimensions() {
+  const scrollCanvas = document.getElementById('pdf-scroll-canvas');
+  if (!scrollCanvas || !zoomWrapper) return;
+  const unscaledW = zoomWrapper.offsetWidth || 680;
+  const unscaledH = zoomWrapper.offsetHeight || 4788;
+  scrollCanvas.style.width = Math.ceil(unscaledW * currentZoom) + 'px';
+  scrollCanvas.style.height = Math.ceil(unscaledH * currentZoom) + 'px';
+}
+
+function changeZoom(delta) {
+  const viewport = document.getElementById('pdf-viewport');
+  const prevZoom = currentZoom;
+  const newZoom = Math.min(1.5, Math.max(0.55, +(currentZoom + delta).toFixed(2)));
+  if (newZoom === prevZoom) return;
+
+  const centerXRatio = (viewport.scrollLeft + viewport.clientWidth / 2) / Math.max(1, viewport.scrollWidth);
+  const centerYRatio = (viewport.scrollTop + viewport.clientHeight / 2) / Math.max(1, viewport.scrollHeight);
+
+  currentZoom = newZoom;
+  zoomWrapper.style.transform = `scale(${currentZoom})`;
+  document.getElementById('zoom-label').textContent = Math.round(currentZoom * 100) + '%';
+  syncPdfScrollDimensions();
+
+  viewport.scrollLeft = Math.max(0, centerXRatio * viewport.scrollWidth - viewport.clientWidth / 2);
+  viewport.scrollTop = Math.max(0, centerYRatio * viewport.scrollHeight - viewport.clientHeight / 2);
+}
+
+function goToPage(pageNum) {
+  currentPage = pageNum;
+  document.getElementById('page-indicator').textContent = pageNum;
+  document.querySelectorAll('.pdf-page').forEach(p => p.classList.remove('active-page-highlight'));
+  const target = document.getElementById('pdf-page-' + pageNum);
+  const viewport = document.getElementById('pdf-viewport');
+  if (target && viewport) {
+    target.classList.add('active-page-highlight');
+    const targetTop = target.offsetTop * currentZoom;
+    viewport.scrollTo({ top: targetTop, behavior: 'smooth' });
+  }
+}
+
+function prevPage() {
+  const idx = pageOrder.indexOf(currentPage);
+  if (idx > 0) goToPage(pageOrder[idx - 1]);
+}
+
+function nextPage() {
+  const idx = pageOrder.indexOf(currentPage);
+  if (idx < pageOrder.length - 1) goToPage(pageOrder[idx + 1]);
+}
+
+function updateCurrentPageOnScroll() {
+  const viewport = document.getElementById('pdf-viewport');
+  const vpRect = viewport.getBoundingClientRect();
+  let closestPage = currentPage;
+  let minDist = Infinity;
+
+  pageOrder.forEach(pNum => {
+    const el = document.getElementById('pdf-page-' + pNum);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const dist = Math.abs(rect.top - vpRect.top - 20);
+      if (dist < minDist) {
+        minDist = dist;
+        closestPage = pNum;
+      }
+    }
+  });
+  currentPage = closestPage;
+  document.getElementById('page-indicator').textContent = currentPage;
+}
+
+// Toggle Hide Highlight (Memorize Mode)
+function toggleQuizMode() {
+  if (editHighlightMode) toggleEditHighlightMode(false);
+  document.body.classList.toggle('quiz-mode');
+  const btn = document.getElementById('btn-quiz');
+  const rehideBtn = document.getElementById('btn-rehide');
+
+  if (document.body.classList.contains('quiz-mode')) {
+    btn.classList.add('quiz-active');
+    btn.textContent = '👀 Show Highlight';
+    rehideBtn.style.display = 'inline-block';
+  } else {
+    btn.classList.remove('quiz-active');
+    btn.textContent = '🧠 Hide Highlight';
+    rehideBtn.style.display = 'none';
+    document.querySelectorAll('.hl.revealed').forEach(el => el.classList.remove('revealed'));
+  }
+}
+
+// Re-hide all previously clicked/revealed blanks at once
+function backToAllHide() {
+  document.querySelectorAll('.hl.revealed').forEach(el => el.classList.remove('revealed'));
+  if (!document.body.classList.contains('quiz-mode')) {
+    toggleQuizMode();
+  }
+}
+
+// Toggle Customize Words Mode (add or remove highlights)
+function toggleEditHighlightMode(forceState) {
+  editHighlightMode = (typeof forceState === 'boolean') ? forceState : !editHighlightMode;
+  const btn = document.getElementById('btn-edit-hl');
+  const banner = document.getElementById('edit-hl-banner');
+
+  if (editHighlightMode) {
+    // Exit quiz mode so all highlights are visible while editing
+    if (document.body.classList.contains('quiz-mode')) {
+      document.body.classList.remove('quiz-mode');
+      document.getElementById('btn-quiz').classList.remove('quiz-active');
+      document.getElementById('btn-quiz').textContent = '🧠 Hide Highlight';
+      document.getElementById('btn-rehide').style.display = 'none';
+      document.querySelectorAll('.hl.revealed').forEach(el => el.classList.remove('revealed'));
+    }
+    document.body.classList.add('edit-hl-mode');
+    btn.classList.add('active');
+    btn.textContent = '✅ Done Editing';
+    banner.classList.add('visible');
+  } else {
+    document.body.classList.remove('edit-hl-mode');
+    btn.classList.remove('active');
+    btn.textContent = '✏️ Customize Words';
+    banner.classList.remove('visible');
+  }
+}
+
+function unwrapHighlightSpan(span) {
+  const parent = span.parentNode;
+  while (span.firstChild) {
+    parent.insertBefore(span.firstChild, span);
+  }
+  parent.removeChild(span);
+  parent.normalize();
+}
+
+function highlightCurrentSelection() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+
+  const range = sel.getRangeAt(0);
+  if (!zoomWrapper.contains(range.commonAncestorContainer)) return;
+
+  // Prevent wrapping across structural table cells, headings, or SVG diagrams
+  const startTd = range.startContainer.nodeType === 1
+    ? range.startContainer.closest('td, th, p, li, div')
+    : range.startContainer.parentElement.closest('td, th, p, li, div');
+  const endTd = range.endContainer.nodeType === 1
+    ? range.endContainer.closest('td, th, p, li, div')
+    : range.endContainer.parentElement.closest('td, th, p, li, div');
+
+  if (!startTd || startTd !== endTd) {
+    alert('Please select words within a single sentence or table cell.');
+    sel.removeAllRanges();
+    return;
+  }
+
+  // Remove any overlapping existing .hl spans inside the selection before applying clean highlight
+  startTd.querySelectorAll('.hl').forEach(existing => {
+    if (range.intersectsNode(existing)) {
+      unwrapHighlightSpan(existing);
+    }
+  });
+
+  const newRange = sel.getRangeAt(0);
+  if (newRange.isCollapsed) return;
+
+  const span = document.createElement('span');
+  span.className = 'hl';
+  try {
+    newRange.surroundContents(span);
+  } catch (err) {
+    const fragment = newRange.extractContents();
+    span.appendChild(fragment);
+    newRange.insertNode(span);
+  }
+  sel.removeAllRanges();
+  syncPdfScrollDimensions();
+}
+
+function resetDefaultHighlights() {
+  zoomWrapper.innerHTML = defaultBookletHTML;
+  syncPdfScrollDimensions();
+}
+
+// Click handler on PDF booklet (reveal blank in quiz mode OR remove highlight in customize mode)
+zoomWrapper.addEventListener('click', (e) => {
+  const hlEl = e.target.closest('.hl');
+  if (!hlEl) return;
+
+  if (document.body.classList.contains('quiz-mode')) {
+    hlEl.classList.toggle('revealed');
+  } else if (editHighlightMode) {
+    unwrapHighlightSpan(hlEl);
+    syncPdfScrollDimensions();
+  }
+});
+
+// Automatically highlight selected text on mouseup when in Customize Words mode
+zoomWrapper.addEventListener('mouseup', () => {
+  if (!editHighlightMode) return;
+  const sel = window.getSelection();
+  if (sel && !sel.isCollapsed && sel.toString().trim().length > 0) {
+    highlightCurrentSelection();
+  }
+});
+
+window.addEventListener('load', syncPdfScrollDimensions);
+window.addEventListener('resize', syncPdfScrollDimensions);
+
+// ============================================================================
+// 2. THREE.JS 3D CARTOON MODEL SIMULATION
+// ============================================================================
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+scene.fog = new THREE.FogExp2(0x87ceeb, 0.008);
+
+const camera = new THREE.PerspectiveCamera(44, container.clientWidth / container.clientHeight, 0.1, 500);
+camera.position.set(22, 23, 35);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(container.clientWidth, container.clientHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.maxPolarAngle = Math.PI / 2 + 0.18;
+controls.minDistance = 12;
+controls.maxDistance = 80;
+controls.target.set(0, 0, -4);
+
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xfffbeb, 0.9);
+sunLight.position.set(25, 40, 20);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+scene.add(sunLight);
+
+function cartoonMat(colorHex, extra = {}) {
+  return new THREE.MeshToonMaterial(Object.assign({ color: colorHex }, extra));
+}
+
+const worldGroup = new THREE.Group();
+scene.add(worldGroup);
+
+// 1. UNDERGROUND CUTAWAY
+const bedrockMesh = new THREE.Mesh(new THREE.BoxGeometry(36, 1.2, 28), cartoonMat(0x57534e));
+bedrockMesh.position.set(0, -5.4, 0);
+worldGroup.add(bedrockMesh);
+
+const subSoilMesh = new THREE.Mesh(new THREE.BoxGeometry(36, 4.8, 28), cartoonMat(0x78350f));
+subSoilMesh.position.set(0, -2.4, 0);
+worldGroup.add(subSoilMesh);
+
+const gwMat = new THREE.MeshToonMaterial({ color: 0x0284c7, transparent: true, opacity: 0.82 });
+const groundwaterMesh = new THREE.Mesh(new THREE.BoxGeometry(36.15, 2.6, 28.15), gwMat);
+groundwaterMesh.position.set(0, -3.5, 0);
+worldGroup.add(groundwaterMesh);
+
+const waterTableLine = new THREE.Mesh(
+  new THREE.BoxGeometry(36.25, 0.14, 28.25),
+  new THREE.MeshBasicMaterial({ color: 0xe0f2fe })
+);
+waterTableLine.position.set(0, -2.2, 0);
+worldGroup.add(waterTableLine);
+
+// 2. SURFACE TERRAIN
+const leftLandMat = cartoonMat(0xa3a346);
+const leftLandMesh = new THREE.Mesh(new THREE.BoxGeometry(24, 0.8, 28), leftLandMat);
+leftLandMesh.position.set(-6, 0.2, 0);
+leftLandMesh.receiveShadow = true;
+worldGroup.add(leftLandMesh);
+
+const rightLandMesh = new THREE.Mesh(new THREE.BoxGeometry(7, 0.8, 28), cartoonMat(0x84a93c));
+rightLandMesh.position.set(14.5, 0.2, 0);
+rightLandMesh.receiveShadow = true;
+worldGroup.add(rightLandMesh);
+
+// 3. RIVER AT THE SIDE + DAM CLOSE TO CITY SIDE
+const riverBedMesh = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.4, 28), cartoonMat(0xd6d3d1));
+riverBedMesh.position.set(8.5, -0.1, 0);
+worldGroup.add(riverBedMesh);
+
+const riverMat = new THREE.MeshToonMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.9 });
+const riverMesh = new THREE.Mesh(new THREE.BoxGeometry(5.0, 0.65, 28), riverMat);
+riverMesh.position.set(8.5, 0.22, 0);
+worldGroup.add(riverMesh);
+
+const damGroup = new THREE.Group();
+damGroup.position.set(8.5, 0.1, -12.8);
+
+const damWall = new THREE.Mesh(new THREE.BoxGeometry(5.4, 1.85, 1.3), cartoonMat(0x94a3b8));
+damWall.position.y = 0.85;
+damWall.castShadow = true;
+damGroup.add(damWall);
+
+const damCrest = new THREE.Mesh(new THREE.BoxGeometry(5.6, 0.22, 1.55), cartoonMat(0x475569));
+damCrest.position.y = 1.82;
+damGroup.add(damCrest);
+
+for (let gx of [-1.5, 0, 1.5]) {
+  const gate = new THREE.Mesh(new THREE.BoxGeometry(0.95, 1.25, 1.4), cartoonMat(0x334155));
+  gate.position.set(gx, 0.72, 0);
+  damGroup.add(gate);
+
+  const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.55, 0.45), cartoonMat(0xfacc15));
+  pillar.position.set(gx, 2.15, 0);
+  damGroup.add(pillar);
+}
+
+const reservoirPool = new THREE.Mesh(
+  new THREE.BoxGeometry(5.0, 1.05, 1.8),
+  new THREE.MeshToonMaterial({ color: 0x0284c7, transparent: true, opacity: 0.92 })
+);
+reservoirPool.position.set(0, 0.55, -1.4);
+damGroup.add(reservoirPool);
+
+damGroup.visible = false;
+worldGroup.add(damGroup);
+
+const liveFishGroup = new THREE.Group();
+const deadFishGroup = new THREE.Group();
+for (let i = 0; i < 6; i++) {
+  const fish = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), cartoonMat(0xf97316));
+  fish.scale.set(1.6, 0.8, 0.7);
+  fish.position.set(7.5 + (i % 3) * 1.0, 0.35, -6 + i * 3.2);
+  liveFishGroup.add(fish);
+
+  const df = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), cartoonMat(0xe2e8f0));
+  df.scale.set(1.6, 0.5, 0.8);
+  df.position.set(7.4 + (i % 3) * 1.1, 0.56, -5 + i * 3.0);
+  deadFishGroup.add(df);
+}
+deadFishGroup.visible = false;
+worldGroup.add(liveFishGroup, deadFishGroup);
+
+const algaeGroup = new THREE.Group();
+for (let i = 0; i < 24; i++) {
+  const algae = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.08, 10), cartoonMat(0x16a34a));
+  algae.position.set(6.7 + Math.random() * 3.6, 0.57, -10 + Math.random() * 22);
+  algaeGroup.add(algae);
+}
+algaeGroup.visible = false;
+worldGroup.add(algaeGroup);
+
+// 4. CENTER FARMLAND + NEARBY FARMLAND + WELL
+const farmGroup = new THREE.Group();
+farmGroup.position.set(-4, 0.65, 1);
+worldGroup.add(farmGroup);
+
+const soilPlotMat = cartoonMat(0xb08968);
+const soilPlotMesh = new THREE.Mesh(new THREE.BoxGeometry(12.5, 0.35, 13.5), soilPlotMat);
+soilPlotMesh.receiveShadow = true;
+farmGroup.add(soilPlotMesh);
+
+const nearbyFarmGroup = new THREE.Group();
+nearbyFarmGroup.position.set(-14.2, 0.65, 1);
+worldGroup.add(nearbyFarmGroup);
+const nearbySoil = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.35, 13.5), cartoonMat(0x713f12));
+nearbyFarmGroup.add(nearbySoil);
+const nearbyCropsGroup = new THREE.Group();
+nearbyFarmGroup.add(nearbyCropsGroup);
+
+function buildNearbyCrops(healthy = true) {
+  while (nearbyCropsGroup.children.length > 0) nearbyCropsGroup.remove(nearbyCropsGroup.children[0]);
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 2; c++) {
+      const p = new THREE.Group();
+      const h = healthy ? 1.0 : 0.48;
+      const col = healthy ? 0x22c55e : 0xa16207;
+      const tilt = healthy ? 0 : 0.38;
+      const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.15, h, 8), cartoonMat(col));
+      stalk.position.y = h / 2;
+      stalk.rotation.z = tilt;
+      p.add(stalk);
+
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.24, 8, 8), cartoonMat(col));
+      leaf.scale.set(1.3, 0.28, 0.65);
+      leaf.position.set(0.18, h * 0.55, 0);
+      leaf.rotation.z = tilt;
+      p.add(leaf);
+
+      p.position.set(-1.0 + c * 2.0, 0.18, -4.8 + r * 2.4);
+      nearbyCropsGroup.add(p);
+    }
+  }
+}
+buildNearbyCrops(true);
+
+const wellGroup = new THREE.Group();
+wellGroup.position.set(4.5, 0.3, -5.0);
+const wellRing = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.85, 14), cartoonMat(0x9ca3af));
+const wellPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 4.5, 10), cartoonMat(0x334155));
+wellPipe.position.set(0, -2.2, 0);
+wellGroup.add(wellRing, wellPipe);
+farmGroup.add(wellGroup);
+
+const farmerGroup = new THREE.Group();
+const fBody = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.35, 0.9, 10), cartoonMat(0x2563eb));
+fBody.position.y = 0.65;
+const fHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), cartoonMat(0xfde68a));
+fHead.position.y = 1.3;
+const fHat = new THREE.Mesh(new THREE.ConeGeometry(0.45, 0.25, 10), cartoonMat(0xfacc15));
+fHat.position.y = 1.52;
+farmerGroup.add(fBody, fHead, fHat);
+farmerGroup.position.set(-5.2, 0.2, 5.2);
+farmGroup.add(farmerGroup);
+
+const cropsGroup = new THREE.Group();
+farmGroup.add(cropsGroup);
+
+function buildCrops(options = {}) {
+  const {
+    density = 'sparse',
+    state = 'original',
+    cropColor = 0x4d7c0f,
+    fruitColor = 0xfacc15,
+    hasFruitOverride = null
+  } = options;
+
+  while (cropsGroup.children.length > 0) cropsGroup.remove(cropsGroup.children[0]);
+
+  const count = (density === 'dense') ? 6 : 4;
+  const step = (density === 'dense') ? 1.8 : 2.8;
+  const start = -((count - 1) * step) / 2;
+
+  for (let r = 0; r < count; r++) {
+    for (let c = 0; c < count; c++) {
+      const plant = new THREE.Group();
+      const x = start + c * step;
+      const z = start + r * step;
+
+      let h = 0.85;
+      let lCol = cropColor;
+      let hasFruit = true;
+      let tilt = 0;
+
+      if (state === 'original') {
+        h = 0.75;
+        lCol = 0x65a30d;
+        hasFruit = (r + c) % 2 === 0;
+      } else if (state === 'withered') {
+        h = 0.5;
+        lCol = 0xa16207;
+        hasFruit = false;
+        tilt = 0.35;
+      } else if (state === 'nofruit') {
+        h = 0.8;
+        lCol = 0x4d7c0f;
+        hasFruit = false;
+      } else if (state === 'bumper') {
+        h = 1.35;
+        lCol = cropColor || 0x16a34a;
+        hasFruit = true;
+      } else if (state === 'pest_damaged') {
+        h = (r + c) % 2 === 0 ? 0.45 : 0.9;
+        lCol = (r + c) % 2 === 0 ? 0x92400e : 0x4d7c0f;
+        hasFruit = (r + c) % 2 !== 0;
+      } else if (state === 'frozen') {
+        h = 0.42;
+        lCol = 0x94a3b8;
+        hasFruit = false;
+        tilt = 0.45;
+      }
+
+      if (hasFruitOverride !== null) hasFruit = hasFruitOverride;
+
+      const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, h, 8), cartoonMat(lCol));
+      stalk.position.y = h / 2;
+      stalk.rotation.z = tilt;
+      stalk.castShadow = true;
+      plant.add(stalk);
+
+      const leaf1 = new THREE.Mesh(new THREE.SphereGeometry(0.32, 8, 8), cartoonMat(lCol));
+      leaf1.scale.set(1.4, 0.3, 0.7);
+      leaf1.position.set(0.24, h * 0.6, 0);
+      plant.add(leaf1);
+
+      if (hasFruit) {
+        const cob = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 8), cartoonMat(fruitColor));
+        cob.scale.set(0.8, 1.35, 0.8);
+        cob.position.set(0, h * 0.85, 0);
+        plant.add(cob);
+      }
+
+      plant.position.set(x, 0.18, z);
+      cropsGroup.add(plant);
+    }
+  }
+}
+
+// 5. EQUIPMENT, WEEDS, PESTS, BEES, GREENHOUSE, POLLUTANTS
+const sprinklersGroup = new THREE.Group();
+for (let sx of [-3, 3]) {
+  for (let sz of [-3, 3]) {
+    const sp = new THREE.Group();
+    const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.8, 8), cartoonMat(0x475569));
+    pipe.position.y = 0.4;
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.12), cartoonMat(0x0284c7));
+    head.position.y = 0.82;
+    sp.add(pipe, head);
+    sp.position.set(sx, 0.18, sz);
+    sprinklersGroup.add(sp);
+  }
+}
+sprinklersGroup.visible = false;
+farmGroup.add(sprinklersGroup);
+
+const sprayParticles = new THREE.Group();
+for (let i = 0; i < 40; i++) {
+  const drop = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+  drop.position.set((Math.random() - 0.5) * 11, 0.5 + Math.random() * 1.4, (Math.random() - 0.5) * 11);
+  sprayParticles.add(drop);
+}
+sprayParticles.visible = false;
+farmGroup.add(sprayParticles);
+
+const harvesterGroup = new THREE.Group();
+const hBody = new THREE.Mesh(new THREE.BoxGeometry(2.3, 1.4, 3.0), cartoonMat(0x16a34a));
+hBody.position.y = 1.05;
+const hCab = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.9, 1.1), cartoonMat(0xbae6fd));
+hCab.position.set(0, 1.9, 0.7);
+const hHeader = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 3.2, 10), cartoonMat(0xfacc15));
+hHeader.rotation.z = Math.PI / 2;
+hHeader.position.set(0, 0.5, 2.0);
+harvesterGroup.add(hBody, hCab, hHeader);
+harvesterGroup.position.set(-2.5, 0.2, 0);
+harvesterGroup.visible = false;
+farmGroup.add(harvesterGroup);
+
+const greenhouseGroup = new THREE.Group();
+const ghFrameMat = new THREE.MeshToonMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.38 });
+const ghWalls = new THREE.Mesh(new THREE.BoxGeometry(12.2, 2.4, 13.2), ghFrameMat);
+ghWalls.position.y = 1.35;
+const ghRoof = new THREE.Mesh(new THREE.CylinderGeometry(6.1, 6.1, 13.2, 12, 1, false, 0, Math.PI), ghFrameMat);
+ghRoof.rotation.z = Math.PI / 2;
+ghRoof.rotation.y = Math.PI / 2;
+ghRoof.position.y = 2.55;
+greenhouseGroup.add(ghWalls, ghRoof);
+greenhouseGroup.visible = false;
+farmGroup.add(greenhouseGroup);
+
+const pestsGroup = new THREE.Group();
+function buildPests(isSuperbug = false) {
+  while (pestsGroup.children.length > 0) pestsGroup.remove(pestsGroup.children[0]);
+  const count = isSuperbug ? 28 : 12;
+  const scale = isSuperbug ? 1.65 : 1.0;
+  const col = isSuperbug ? 0x7f1d1d : 0xdc2626;
+  for (let i = 0; i < count; i++) {
+    const bug = new THREE.Mesh(new THREE.SphereGeometry(0.2 * scale, 8, 8), cartoonMat(col));
+    bug.position.set((Math.random() - 0.5) * 10.5, 1.1 + Math.random() * 0.8, (Math.random() - 0.5) * 10.5);
+    pestsGroup.add(bug);
+  }
+}
+buildPests(false);
+farmGroup.add(pestsGroup);
+
+const weedsGroup = new THREE.Group();
+function buildWeeds(mode = 'normal') {
+  while (weedsGroup.children.length > 0) weedsGroup.remove(weedsGroup.children[0]);
+  const isSuperweed = mode === 'superweed';
+  const isExtraWeeds = mode === 'more_normal';
+  const count = isSuperweed ? 36 : (isExtraWeeds ? 26 : 16);
+  const scale = isSuperweed ? 1.75 : (isExtraWeeds ? 1.15 : 1.0);
+  const col = isSuperweed ? 0x365314 : 0x65a30d;
+  for (let i = 0; i < count; i++) {
+    const weed = new THREE.Mesh(new THREE.ConeGeometry(0.28 * scale, 0.75 * scale, 6), cartoonMat(col));
+    weed.position.set((Math.random() - 0.5) * 11, 0.45 * scale, (Math.random() - 0.5) * 11);
+    weedsGroup.add(weed);
+  }
+}
+buildWeeds('normal');
+farmGroup.add(weedsGroup);
+
+const pollinatorsGroup = new THREE.Group();
+for (let i = 0; i < 14; i++) {
+  const pol = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), cartoonMat(i % 2 === 0 ? 0xfacc15 : 0xf472b6));
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.04, 0.2), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  pol.add(body, wing);
+  pol.position.set((Math.random() - 0.5) * 11, 1.6 + Math.random() * 0.8, (Math.random() - 0.5) * 11);
+  pollinatorsGroup.add(pol);
+}
+pollinatorsGroup.visible = true;
+farmGroup.add(pollinatorsGroup);
+
+// Air Pollutant Clouds
+const pollutantGroup = new THREE.Group();
+function buildPollutants(outsideGreenhouse = false) {
+  while (pollutantGroup.children.length > 0) pollutantGroup.remove(pollutantGroup.children[0]);
+  const count = outsideGreenhouse ? 28 : 20;
+  for (let i = 0; i < count; i++) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(0.65, 8, 8),
+      new THREE.MeshToonMaterial({ color: 0x64748b, transparent: true, opacity: 0.72 })
+    );
+    if (outsideGreenhouse) {
+      if (i % 3 === 0) {
+        puff.position.set((Math.random() - 0.5) * 15, 8.9 + Math.random() * 3.0, (Math.random() - 0.5) * 15);
+      } else if (i % 3 === 1) {
+        const sideX = (Math.random() < 0.5) ? (-7.0 - Math.random() * 5.5) : (6.8 + Math.random() * 3.0);
+        puff.position.set(sideX, 1.8 + Math.random() * 4.5, (Math.random() - 0.5) * 14);
+      } else {
+        const sideZ = (Math.random() < 0.5) ? (-7.3 - Math.random() * 2.5) : (7.3 + Math.random() * 2.5);
+        puff.position.set((Math.random() - 0.5) * 14, 1.8 + Math.random() * 4.5, sideZ);
+      }
+      puff.userData = { minY: 1.6, maxY: 12.2 };
+    } else {
+      puff.position.set((Math.random() - 0.5) * 12, 1.8 + Math.random() * 2.5, (Math.random() - 0.5) * 12);
+      puff.userData = { minY: 1.4, maxY: 4.6 };
+    }
+    pollutantGroup.add(puff);
+  }
+}
+buildPollutants(false);
+pollutantGroup.visible = false;
+farmGroup.add(pollutantGroup);
+
+// 6. VILLAGE & DISTANT CITY
+const villageGroup = new THREE.Group();
+villageGroup.position.set(14.5, 0.6, 2);
+worldGroup.add(villageGroup);
+
+function createHouse(x, z, wCol, rCol) {
+  const h = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.5, 2.1), cartoonMat(wCol));
+  base.position.y = 0.75;
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(1.75, 1.1, 4), cartoonMat(rCol));
+  roof.position.y = 2.05;
+  roof.rotation.y = Math.PI / 4;
+  h.add(base, roof);
+  h.position.set(x, 0, z);
+  return h;
+}
+villageGroup.add(createHouse(-1.1, -5, 0xfef3c7, 0xdc2626));
+villageGroup.add(createHouse(1.2, -1.2, 0xfde68a, 0xea580c));
+villageGroup.add(createHouse(-1.0, 2.8, 0xffedd5, 0xb91c1c));
+villageGroup.add(createHouse(1.1, 6.4, 0xfef9c3, 0xd97706));
+
+const farGround = new THREE.Mesh(new THREE.BoxGeometry(75, 0.8, 38), cartoonMat(0x4d7c0f));
+farGround.position.set(4, 0.15, -33);
+worldGroup.add(farGround);
+
+const roadMat = cartoonMat(0x334155);
+const r1 = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.15, 18), roadMat);
+r1.position.set(14.5, 0.62, -21);
+const r2 = new THREE.Mesh(new THREE.BoxGeometry(24, 0.15, 2.0), roadMat);
+r2.position.set(3.5, 0.62, -30);
+const r3 = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.15, 12), roadMat);
+r3.position.set(-7.5, 0.62, -36);
+worldGroup.add(r1, r2, r3);
+
+const cityGroup = new THREE.Group();
+cityGroup.position.set(-6, 0.55, -44);
+worldGroup.add(cityGroup);
+
+[
+  { x: -7, z: -2, w: 3.0, h: 11, d: 3.0, c: 0x64748b },
+  { x: -3, z: -3, w: 3.6, h: 14.5, d: 3.4, c: 0x475569 },
+  { x: 1.5, z: -2, w: 3.0, h: 9.5, d: 3.0, c: 0x94a3b8 }
+].forEach(b => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), cartoonMat(b.c));
+  m.position.set(b.x, b.h / 2, b.z);
+  cityGroup.add(m);
+});
+
+const hospitalGroup = new THREE.Group();
+hospitalGroup.position.set(6.5, 0, -1.5);
+const hospBodyMat = cartoonMat(0xf8fafc);
+const hospBody = new THREE.Mesh(new THREE.BoxGeometry(4.4, 7.5, 3.8), hospBodyMat);
+hospBody.position.y = 3.75;
+const hospCrossV = new THREE.Mesh(new THREE.BoxGeometry(0.55, 1.8, 0.25), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+hospCrossV.position.set(0, 5.6, 1.95);
+const hospCrossH = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.55, 0.25), new THREE.MeshBasicMaterial({ color: 0xef4444 }));
+hospCrossH.position.set(0, 5.6, 1.95);
+
+const hospBeaconMat = new THREE.MeshBasicMaterial({ color: 0x94a3b8 });
+const hospBeacon = new THREE.Mesh(new THREE.SphereGeometry(0.85, 12, 12), hospBeaconMat);
+hospBeacon.position.set(0, 8.2, 0);
+hospitalGroup.add(hospBody, hospCrossV, hospCrossH, hospBeacon);
+cityGroup.add(hospitalGroup);
+
+const cityLakeBed = new THREE.Mesh(new THREE.CylinderGeometry(4.5, 4.5, 0.2, 20), cartoonMat(0xd6d3d1));
+cityLakeBed.position.set(14.5, 0.1, -1.0);
+cityGroup.add(cityLakeBed);
+
+const cityLakeMat = cartoonMat(0x38bdf8);
+const cityLakeMesh = new THREE.Mesh(new THREE.CylinderGeometry(4.3, 4.3, 0.35, 20), cityLakeMat);
+cityLakeMesh.position.set(14.5, 0.2, -1.0);
+cityGroup.add(cityLakeMesh);
+
+// ============================================================================
+// 3. MULTI-CHOICE TOOL ENGINE (ADDITIVE COMBINED EFFECTS)
+// ============================================================================
+const selectedTools = new Set();
+let currentState = 'without'; // 'without' | 'with' | 'overuse'
+
+let targetGwY = -3.5;
+let targetGwScaleY = 1.0;
+let targetRiverY = 0.22;
+let targetRiverScaleY = 1.0;
+let targetLandY = 0.2;
+let targetLakeScale = 1.0;
+let hospitalAlert = false;
+let farmerSpeed = 0.8;
+
+const TOOL_LABELS = {
+  'irrigation': 'Irrigation',
+  'fertilizer': 'Chemical Fertilizer',
+  'pesticide': 'Pesticide',
+  'weedicide': 'Weedicide',
+  'machines': 'Machines',
+  'greenhouse': 'Greenhouse',
+  'gm-drought': 'Drought-GM',
+  'gm-temp': 'Temp-GM',
+  'gm-pest': 'Pest-GM'
+};
+
+const TOOL_TO_PAGE = {
+  'irrigation': 42,
+  'fertilizer': 44,
+  'pesticide': 44,
+  'weedicide': 44,
+  'machines': 45,
+  'greenhouse': 45,
+  'gm-drought': 46,
+  'gm-temp': 46,
+  'gm-pest': 46
+};
+
+function syncToolButtonsUI() {
+  document.getElementById('selected-count').textContent = selectedTools.size;
+  document.querySelectorAll('.tool-btn').forEach(btn => {
+    const toolId = btn.id.replace('tool-', '');
+    const isSel = selectedTools.has(toolId);
+    btn.classList.toggle('selected', isSel);
+    btn.classList.toggle('overuse-selected', isSel && currentState === 'overuse');
+  });
+}
+
+function setSimState(state) {
+  currentState = state;
+  document.getElementById('btn-mode-without').className = state === 'without' ? 'mode-btn active-without' : 'mode-btn';
+  document.getElementById('btn-mode-with').className = state === 'with' ? 'mode-btn active-adv' : 'mode-btn';
+  document.getElementById('btn-mode-overuse').className = state === 'overuse' ? 'mode-btn active-dis' : 'mode-btn';
+
+  if (state !== 'without' && selectedTools.size === 0) {
+    selectedTools.add('irrigation');
+  }
+
+  syncToolButtonsUI();
+  updateSimulation();
+}
+
+function toggleTool(tool) {
+  if (selectedTools.has(tool)) {
+    selectedTools.delete(tool);
+  } else {
+    selectedTools.add(tool);
+    if (currentState === 'without') {
+      currentState = 'with';
+      document.getElementById('btn-mode-without').className = 'mode-btn';
+      document.getElementById('btn-mode-with').className = 'mode-btn active-adv';
+      document.getElementById('btn-mode-overuse').className = 'mode-btn';
+    }
+    if (currentState === 'overuse' && tool === 'irrigation') goToPage(43);
+    else if (TOOL_TO_PAGE[tool]) goToPage(TOOL_TO_PAGE[tool]);
+  }
+
+  if (selectedTools.size === 0) {
+    currentState = 'without';
+    document.getElementById('btn-mode-without').className = 'mode-btn active-without';
+    document.getElementById('btn-mode-with').className = 'mode-btn';
+    document.getElementById('btn-mode-overuse').className = 'mode-btn';
+  }
+
+  syncToolButtonsUI();
+  updateSimulation();
+}
+
+function setHUD(yieldPct, moistPct, tempStr, pestStr, weedStr, beesStr, riverPct, gwPct, nearbyStr, lakePct, hospAlert) {
+  const clamp = (v) => Math.max(8, Math.min(100, Math.round(v)));
+  yieldPct = clamp(yieldPct);
+  moistPct = clamp(moistPct);
+  riverPct = clamp(riverPct);
+  gwPct = clamp(gwPct);
+  lakePct = clamp(lakePct);
+
+  const bar = (id, pct) => {
+    const el = document.getElementById(id);
+    el.style.width = pct + '%';
+    el.style.backgroundColor = pct >= 70 ? '#22c55e' : (pct >= 45 ? '#f59e0b' : '#ef4444');
+  };
+  bar('bar-yield', yieldPct);
+  bar('bar-moisture', moistPct);
+  bar('bar-river', riverPct);
+  bar('bar-gw', gwPct);
+  bar('bar-lake', lakePct);
+
+  document.getElementById('val-temp').textContent = tempStr;
+
+  const pestEl = document.getElementById('val-pest');
+  pestEl.textContent = pestStr;
+  pestEl.style.color = pestStr.includes('Less') ? '#16a34a' : '#dc2626';
+
+  const weedEl = document.getElementById('val-weed');
+  weedEl.textContent = weedStr;
+  weedEl.style.color = weedStr.includes('Less') ? '#16a34a' : '#dc2626';
+
+  const beesEl = document.getElementById('val-bees');
+  beesEl.textContent = beesStr;
+  beesEl.style.color = beesStr.includes('Die') ? '#dc2626' : '#16a34a';
+
+  pollinatorsGroup.visible = !beesStr.includes('Die');
+
+  document.getElementById('val-nearby').textContent = nearbyStr;
+  document.getElementById('val-nearby').style.color = nearbyStr === 'Healthy' ? '#16a34a' : '#dc2626';
+
+  hospitalAlert = hospAlert;
+  document.getElementById('val-hospital').textContent = hospAlert ? '🚨 More Cases (Lit!)' : 'Normal';
+  document.getElementById('val-hospital').style.color = hospAlert ? '#dc2626' : '#16a34a';
+}
+
+function updateSimulation() {
+  sprinklersGroup.visible = false;
+  sprayParticles.visible = false;
+  harvesterGroup.visible = false;
+  greenhouseGroup.visible = false;
+  damGroup.visible = false;
+  pestsGroup.visible = false;
+  weedsGroup.visible = false;
+  pollutantGroup.visible = false;
+  algaeGroup.visible = false;
+  liveFishGroup.visible = true;
+  deadFishGroup.visible = false;
+  farmerGroup.visible = true;
+  farmerSpeed = 0.8;
+
+  targetGwY = -3.5; targetGwScaleY = 1.0;
+  targetRiverY = 0.22; targetRiverScaleY = 1.0;
+  targetLandY = 0.2;
+  targetLakeScale = 1.0;
+  riverMat.color.setHex(0x38bdf8);
+  gwMat.color.setHex(0x0284c7);
+  soilPlotMat.color.setHex(0xb08968);
+  leftLandMat.color.setHex(0xa3a346);
+  scene.background.setHex(0x87ceeb);
+  scene.fog.color.setHex(0x87ceeb);
+  buildNearbyCrops(true);
+
+  const toast = document.getElementById('sim-toast');
+
+  if (selectedTools.size === 0 || currentState === 'without') {
+    buildCrops({ density: 'sparse', state: 'original' });
+    buildPests(false); pestsGroup.visible = true;
+    buildWeeds('normal'); weedsGroup.visible = true;
+    setHUD(28, 25, '22°C (Dry)', 'Active', 'Growing', 'Active 🐝🦋', 85, 85, 'Healthy', 85, false);
+    toast.innerHTML = '<strong>Original Condition (Without Tools):</strong> Dry area, poor soil, 1 farmer working slowly, pests &amp; weeds present, bees/butterflies active &rarr; <strong>Low crop yield</strong>. Click multiple tools below to combine effects!';
+    return;
+  }
+
+  const hasIrr = selectedTools.has('irrigation');
+  const hasFert = selectedTools.has('fertilizer');
+  const hasPest = selectedTools.has('pesticide');
+  const hasWeed = selectedTools.has('weedicide');
+  const hasMach = selectedTools.has('machines');
+  const hasGH = selectedTools.has('greenhouse');
+  const hasGMDrought = selectedTools.has('gm-drought');
+  const hasGMTemp = selectedTools.has('gm-temp');
+  const hasGMPest = selectedTools.has('gm-pest');
+  const hasAnyGM = hasGMDrought || hasGMTemp || hasGMPest;
+
+  const isOveruse = (currentState === 'overuse');
+  const activeNames = Array.from(selectedTools).map(t => TOOL_LABELS[t]).join(' + ');
+  const notes = [];
+
+  let cropYield = 30;
+  let soilMoisture = 25;
+  let riverWater = 85;
+  let waterTable = 85;
+  let cityLake = 85;
+  let tempStr = '22°C (Dry)';
+  let pestStr = 'Active';
+  let weedStr = 'Growing';
+  let beesStr = 'Active 🐝🦋';
+  let nearbyStr = 'Healthy';
+  let hospAlert = false;
+
+  let cropDensity = 'dense';
+  let cropState = 'bumper';
+  let cropColor = 0x16a34a;
+  let fruitColor = 0xfacc15;
+  let hasFruit = true;
+  let nearbyWithered = false;
+
+  // 1. IRRIGATION SYSTEM
+  if (hasIrr) {
+    sprinklersGroup.visible = true;
+    sprayParticles.visible = true;
+    if (!isOveruse) {
+      cropYield += 18;
+      soilMoisture = 88;
+      riverWater -= 10;
+      waterTable -= 10;
+      cityLake -= 5;
+      soilPlotMat.color.setHex(0x713f12);
+      leftLandMat.color.setHex(0x65a30d);
+      tempStr = '21°C (Moist)';
+      notes.push('💦 Sprinklers moisten dry soil');
+    } else {
+      damGroup.visible = true;
+      cropYield -= 10;
+      soilMoisture = 28;
+      riverWater = 18;
+      waterTable = 15;
+      cityLake = 28;
+      targetGwY = -4.55; targetGwScaleY = 0.22;
+      targetRiverY = -0.15; targetRiverScaleY = 0.15;
+      targetLandY = -0.45;
+      targetLakeScale = 0.38;
+      liveFishGroup.visible = false;
+      cropState = 'withered';
+      nearbyWithered = true;
+      nearbyStr = 'Crops Wither!';
+      notes.push('💦 Water overextraction & dam on river close to city: water table drops, land subsides, nearby farm crops wither & downstream/city lake shrinks');
+    }
+  }
+
+  // 2. CHEMICAL FERTILIZER
+  if (hasFert) {
+    if (!isOveruse) {
+      cropYield += 20;
+      soilPlotMat.color.setHex(0x451a03);
+      fruitColor = 0xfacc15;
+      hasFruit = true;
+      notes.push('🧪 Fertile soil boosts fruit & yield');
+    } else {
+      cropYield += 5;
+      soilPlotMat.color.setHex(0x9a3412);
+      algaeGroup.visible = true;
+      riverMat.color.setHex(0x15803d);
+      liveFishGroup.visible = false;
+      deadFishGroup.visible = true;
+      gwMat.color.setHex(0x1e293b);
+      buildPollutants(false);
+      pollutantGroup.visible = true;
+      riverWater = Math.min(riverWater, 25);
+      waterTable = Math.min(waterTable, 25);
+      hospAlert = true;
+      notes.push('🧪 Fertilizer runoff causes algae, dead fish, dark groundwater & hospital cases');
+    }
+  }
+
+  // 3. WEEDICIDE + FERTILIZER INTERACTION
+  if (hasWeed) {
+    if (!isOveruse) {
+      cropYield += 14;
+      weedsGroup.visible = false;
+      weedStr = 'Less Weed';
+      notes.push('🌿 Weedicide clears weeds');
+    } else {
+      cropYield -= 18;
+      buildWeeds('superweed');
+      weedsGroup.visible = true;
+      weedStr = 'Super Weed + More Weed!';
+      riverMat.color.setHex(0x1e1b4b);
+      liveFishGroup.visible = false;
+      deadFishGroup.visible = true;
+      gwMat.color.setHex(0x0f172a);
+      buildPollutants(false);
+      pollutantGroup.visible = true;
+      riverWater = Math.min(riverWater, 20);
+      waterTable = Math.min(waterTable, 20);
+      hospAlert = true;
+      if (cropState === 'bumper') cropState = 'withered';
+      notes.push('🌿 Overuse creates super weeds + more weeds & water pollution');
+    }
+  } else {
+    if (hasFert) {
+      buildWeeds('more_normal');
+      weedsGroup.visible = true;
+      weedStr = 'More Weed (No Weedicide)';
+      cropYield -= 6;
+      notes.push('⚠️ Chemical fertilizer increases weeds since no weedicide is applied');
+    } else {
+      buildWeeds('normal');
+      weedsGroup.visible = true;
+      weedStr = 'Growing';
+    }
+  }
+
+  // 4. PESTICIDE & PEST-RESISTANT GM CROPS INTERACTION
+  const pestControlActive = hasPest || hasGMPest;
+  if (pestControlActive) {
+    if (!isOveruse) {
+      cropYield += (hasPest ? 14 : 0) + (hasGMPest ? 16 : 0);
+      pestsGroup.visible = false;
+      pestStr = 'Less Pest';
+      if (hasPest) notes.push('🐛 Pesticide reduces pests');
+      if (hasGMPest) notes.push('🛡️ Pest-resistant GM crops block pests');
+    } else {
+      cropYield -= 22;
+      buildPests(true);
+      pestsGroup.visible = true;
+      pestStr = 'Super Bug + More Pests!';
+      cropState = 'pest_damaged';
+      if (hasPest) {
+        riverMat.color.setHex(0x1e1b4b);
+        liveFishGroup.visible = false;
+        deadFishGroup.visible = true;
+        gwMat.color.setHex(0x0f172a);
+        buildPollutants(false);
+        pollutantGroup.visible = true;
+        riverWater = Math.min(riverWater, 20);
+        waterTable = Math.min(waterTable, 20);
+        hospAlert = true;
+        notes.push('🐛 Pesticide overuse creates super bugs + more pests & pollutes water');
+      }
+      if (hasGMPest) {
+        notes.push('🛡️ Pest-resistant GM crops over time lead to super bugs + more pests');
+      }
+    }
+  } else {
+    buildPests(false);
+    pestsGroup.visible = true;
+    pestStr = 'Active';
+  }
+
+  // 5. BEES / BUTTERFLY RULE
+  if ((hasPest && isOveruse) || hasGMPest) {
+    beesStr = 'Die ☠️';
+    notes.push('🐝🦋 Bees/butterflies die');
+  } else {
+    beesStr = 'Active 🐝🦋';
+  }
+
+  // 6. MACHINES
+  if (hasMach) {
+    farmerGroup.visible = false;
+    harvesterGroup.visible = true;
+    if (!isOveruse) {
+      cropYield += 12;
+      notes.push('🚜 Combine harvester speeds up harvesting');
+    } else {
+      cropYield -= 15;
+      buildPollutants(hasGH);
+      pollutantGroup.visible = true;
+      scene.background.setHex(0x94a3b8);
+      scene.fog.color.setHex(0x94a3b8);
+      tempStr = '34°C (Hotter!)';
+      cropState = 'withered';
+      notes.push('🚜 Fossil fuel emissions raise air temperature & wither crops');
+    }
+  }
+
+  // 7. GREENHOUSE
+  if (hasGH) {
+    greenhouseGroup.visible = true;
+    if (!isOveruse) {
+      cropYield += 16;
+      soilMoisture = Math.max(soilMoisture, 72);
+      tempStr = '15°C Inside (Controlled)';
+      if (!pestControlActive) {
+        pestsGroup.visible = false;
+        pestStr = 'Less Pest (Blocked)';
+      }
+      notes.push('🏡 Greenhouse controls climate & blocks pests');
+    } else {
+      cropYield += 8;
+      buildPollutants(true);
+      pollutantGroup.visible = true;
+      scene.background.setHex(0x94a3b8);
+      scene.fog.color.setHex(0x94a3b8);
+      tempStr = '35°C Outside (High Cost!)';
+      nearbyWithered = true;
+      nearbyStr = 'Crops Wither!';
+      notes.push('🏡 Greenhouse GHG emissions stay outside the greenhouse, warming air & withering nearby farm crops');
+    }
+  }
+
+  // 8. DROUGHT-RESISTANT & TEMPERATURE-RESISTANT GM CROPS
+  if (hasGMDrought) {
+    if (!isOveruse) {
+      cropYield += 15;
+      soilMoisture = Math.max(soilMoisture, 55);
+      cropColor = 0x10b981;
+      notes.push('🌵 Drought-GM thrives with less water');
+    } else {
+      cropYield += 10;
+      notes.push('🌵 Drought-GM contaminates nearby non-GM farm');
+    }
+  }
+
+  if (hasGMTemp) {
+    if (!isOveruse) {
+      cropYield += 15;
+      tempStr = hasGH ? '15°C Controlled + Extreme Tolerant' : '3°C–35°C Tolerant';
+      cropColor = 0x06b6d4;
+      notes.push('🌡️ Temp-GM tolerates extreme heat/cold');
+    } else {
+      cropYield += 10;
+      notes.push('🌡️ Temp-GM contaminates nearby non-GM farm');
+    }
+  }
+
+  if (hasAnyGM && isOveruse) {
+    nearbyWithered = true;
+    nearbyStr = nearbyStr === 'Crops Wither!' ? 'Wither & Yield Decreased!' : 'Yield Decreased!';
+    hospAlert = true;
+  }
+
+  buildNearbyCrops(!nearbyWithered);
+
+  buildCrops({
+    density: cropDensity,
+    state: cropState,
+    cropColor: cropColor,
+    fruitColor: fruitColor,
+    hasFruitOverride: hasFruit
+  });
+
+  setHUD(cropYield, soilMoisture, tempStr, pestStr, weedStr, beesStr, riverWater, waterTable, nearbyStr, cityLake, hospAlert);
+
+  const modeLabel = isOveruse ? 'Overuse / Over Time' : 'With Tools (Normal)';
+  toast.innerHTML = `<strong>${modeLabel} [${activeNames}]:</strong><br>${notes.join(' • ')}.`;
+}
+
+function resetSimulation() {
+  selectedTools.clear();
+  currentState = 'without';
+  document.getElementById('btn-mode-without').className = 'mode-btn active-without';
+  document.getElementById('btn-mode-with').className = 'mode-btn';
+  document.getElementById('btn-mode-overuse').className = 'mode-btn';
+  syncToolButtonsUI();
+  updateSimulation();
+}
+
+resetSimulation();
+syncPdfScrollDimensions();
+
+// ============================================================================
+// 4. ANIMATION LOOP
+// ============================================================================
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
+
+  groundwaterMesh.position.y += (targetGwY - groundwaterMesh.position.y) * 0.06;
+  groundwaterMesh.scale.y += (targetGwScaleY - groundwaterMesh.scale.y) * 0.06;
+  waterTableLine.position.y = groundwaterMesh.position.y + (1.3 * groundwaterMesh.scale.y);
+
+  riverMesh.position.y += (targetRiverY - riverMesh.position.y) * 0.06;
+  riverMesh.scale.y += (targetRiverScaleY - riverMesh.scale.y) * 0.06;
+
+  leftLandMesh.position.y += (targetLandY - leftLandMesh.position.y) * 0.06;
+  farmGroup.position.y = leftLandMesh.position.y + 0.45;
+  nearbyFarmGroup.position.y = leftLandMesh.position.y + 0.45;
+
+  cityLakeMesh.scale.x += (targetLakeScale - cityLakeMesh.scale.x) * 0.06;
+  cityLakeMesh.scale.z += (targetLakeScale - cityLakeMesh.scale.z) * 0.06;
+
+  if (hospitalAlert) {
+    const pulse = 0.5 + 0.5 * Math.sin(elapsed * 8);
+    hospBeaconMat.color.setRGB(1, pulse * 0.2, pulse * 0.2);
+    hospBodyMat.color.setRGB(1, 0.85 + pulse * 0.15, 0.85 + pulse * 0.15);
+  } else {
+    hospBeaconMat.color.setHex(0x94a3b8);
+    hospBodyMat.color.setHex(0xf8fafc);
+  }
+
+  if (farmerGroup.visible) {
+    farmerGroup.position.x = Math.sin(elapsed * farmerSpeed) * 4.5;
+  }
+
+  if (sprinklersGroup.visible) {
+    sprinklersGroup.children.forEach(sp => sp.children[1].rotation.y += dt * 4);
+    sprayParticles.children.forEach((drop, i) => {
+      drop.position.y -= dt * 2.4;
+      if (drop.position.y < 0.3) drop.position.y = 1.8 + (i % 5) * 0.15;
+    });
+  }
+
+  if (harvesterGroup.visible) {
+    harvesterGroup.position.z = Math.sin(elapsed * 2.2) * 4.2;
+    harvesterGroup.rotation.y = Math.cos(elapsed * 2.2) >= 0 ? 0 : Math.PI;
+  }
+
+  if (pestsGroup.visible) {
+    pestsGroup.children.forEach((b, i) => {
+      b.position.y = 1.2 + Math.sin(elapsed * 5 + i) * 0.22;
+    });
+  }
+  if (pollinatorsGroup.visible) {
+    pollinatorsGroup.children.forEach((p, i) => {
+      p.position.y = 1.7 + Math.sin(elapsed * 6 + i) * 0.25;
+      p.position.x += Math.cos(elapsed * 2 + i) * 0.015;
+    });
+  }
+
+  if (pollutantGroup.visible) {
+    pollutantGroup.children.forEach(p => {
+      const minY = (p.userData && p.userData.minY !== undefined) ? p.userData.minY : 1.4;
+      const maxY = (p.userData && p.userData.maxY !== undefined) ? p.userData.maxY : 4.6;
+      p.position.y += dt * 0.65;
+      if (p.position.y > maxY) p.position.y = minY;
+    });
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+animate();
+</script>
+</body>
+</html>
